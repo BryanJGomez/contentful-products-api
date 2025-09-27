@@ -2,19 +2,21 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule } from '@nestjs/terminus';
+import { ScheduleModule } from '@nestjs/schedule';
 
+import { ConfigurationService } from './config/services/configuration.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigurationValidate } from './config/services/configuration.validate';
 import { environment } from './enums/env.enum';
 import { ProductsModule } from './app/products/products.module';
 import { ConfigurationModule } from './config/configuration.module';
-import { ConfigurationService } from './config/services/configuration.service';
 import { WinstonModule } from 'nest-winston';
 import { loggerOptions } from './utils';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: ConfigurationValidate,

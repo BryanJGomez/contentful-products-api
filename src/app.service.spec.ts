@@ -29,8 +29,19 @@ const mockTypeOrmHealthIndicator = {
 
 describe('AppService', () => {
   let service: AppService;
+  //
+  // Backup original env vars
+  const originalEnv = process.env;
   // Mocks
   beforeEach(async () => {
+    // Mock environment variables
+    process.env = {
+      ...originalEnv,
+      APPLICATION_NAME: 'test-app',
+      npm_package_version: '1.0.0',
+      HOSTNAME: 'test-hostname',
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppService,
@@ -76,6 +87,8 @@ describe('AppService', () => {
   });
   //
   afterEach(() => {
+    // Restore original environment
+    process.env = originalEnv;
     // Limpia todos los mocks después de cada test
     jest.clearAllMocks();
   });
