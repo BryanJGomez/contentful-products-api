@@ -2,23 +2,27 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule } from '@nestjs/terminus';
+import { ScheduleModule } from '@nestjs/schedule';
 
+import { ConfigurationService } from './config/services/configuration.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigurationValidate } from './config/services/configuration.validate';
 import { environment } from './enums/env.enum';
 import { ProductsModule } from './app/products/products.module';
 import { ConfigurationModule } from './config/configuration.module';
-import { ConfigurationService } from './config/services/configuration.service';
+import { WinstonModule } from 'nest-winston';
+import { loggerOptions } from './utils';
 
 @Module({
   imports: [
-    TerminusModule,
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: ConfigurationValidate,
     }),
-    ConfigurationModule,
+    //
+    WinstonModule.forRoot(loggerOptions(process.env.APPLICATION_NAME || 'app')),
     // Database connection config
     TypeOrmModule.forRootAsync({
       imports: [ConfigurationModule],
@@ -37,6 +41,8 @@ import { ConfigurationService } from './config/services/configuration.service';
       }),
       inject: [ConfigurationService],
     }),
+    TerminusModule,
+    ConfigurationModule,
     ProductsModule,
   ],
   controllers: [AppController],
