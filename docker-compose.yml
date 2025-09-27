@@ -24,7 +24,7 @@ services:
         aliases:
           - network-contentful-products-api
     cpus: 1
-    mem_limit: 1024M
+    mem_limit: 1GB
 
   postgres:
     image: postgres:15-alpine
