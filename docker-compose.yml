@@ -1,0 +1,51 @@
+# docker-compose.yml (dev)
+services:
+  app:
+    build:
+      context: .
+      target: development
+      dockerfile: ./Dockerfile.dev
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+    working_dir: /app
+    user: node
+    command: bash -lc "$DOCKER_COMMAND"
+    stop_grace_period: 10s
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      backend:
+        aliases:
+          - network-contentful-products-api
+    cpus: 1
+    mem_limit: 1024M
+
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      backend:
+        aliases:
+          - postgres
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: contentful-products-api-postgres-data
