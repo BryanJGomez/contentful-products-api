@@ -14,6 +14,9 @@ export class ConfigurationService {
   get port(): number {
     return <number>this.config.get('PORT');
   }
+  get jwtSecret(): string {
+    return <string>this.config.get('JWT_SECRET');
+  }
   // Database
   get dbHost(): string {
     return <string>this.config.get('DB_HOST');
