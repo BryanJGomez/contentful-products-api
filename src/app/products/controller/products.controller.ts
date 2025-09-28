@@ -11,8 +11,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { SearchQueryParamsDto } from '../dto/product.dto';
 import { IResultData, IProduct } from '../interface/producto.interface';
 import { IUpdateResult } from '../interface/producto.interface';
+import { Public } from '../../../decorators/public.decorator';
 
 @ApiTags('Products')
+@Public() // Modulo publico(sin autenticacion)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

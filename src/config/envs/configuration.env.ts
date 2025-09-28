@@ -13,6 +13,10 @@ export class ConfigurationEnv {
   @IsNotEmpty()
   @IsString()
   GLOBAL_PREFIX: string;
+
+  @IsNotEmpty()
+  @IsString()
+  JWT_SECRET: string;
   // Configuration for Database
   @IsNotEmpty()
   @IsString()

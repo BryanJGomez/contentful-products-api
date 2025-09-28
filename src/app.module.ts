@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule } from '@nestjs/terminus';
 import { ScheduleModule } from '@nestjs/schedule';
+import { WinstonModule } from 'nest-winston';
+import { APP_GUARD } from '@nestjs/core';
 
 import { ConfigurationService } from './config/services/configuration.service';
 import { AppController } from './app.controller';
@@ -11,9 +13,10 @@ import { ConfigurationValidate } from './config/services/configuration.validate'
 import { environment } from './enums/env.enum';
 import { ProductsModule } from './app/products/products.module';
 import { ConfigurationModule } from './config/configuration.module';
-import { WinstonModule } from 'nest-winston';
-import { loggerOptions } from './utils';
 import { ReportsModule } from './app/reports/reports.module';
+import { AuthModule } from './app/auth/auth.module';
+import { JwtAuthGuard } from './app/auth/guards/jwt-auth.guard';
+import { loggerOptions } from './utils';
 
 @Module({
   imports: [
@@ -46,8 +49,15 @@ import { ReportsModule } from './app/reports/reports.module';
     ConfigurationModule,
     ProductsModule,
     ReportsModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
