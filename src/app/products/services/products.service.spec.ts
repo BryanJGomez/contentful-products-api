@@ -5,6 +5,7 @@ import { ContenfulService } from './contenful.service';
 import { Products } from '../entities/product.entity';
 import { SearchQueryParamsDto } from '../dto/product.dto';
 import { InsertResult } from 'typeorm';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 describe('ProductsService (unit)', () => {
   let service: ProductsService;
@@ -21,11 +22,20 @@ describe('ProductsService (unit)', () => {
       syncProductsFromApi: jest.fn(),
     };
 
+    const loggerMock = {
+      log: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+      verbose: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
         { provide: ProductsRepository, useValue: repoMock },
         { provide: ContenfulService, useValue: contenfulServiceMock },
+        { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
       ],
     }).compile();
 

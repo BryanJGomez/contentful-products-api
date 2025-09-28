@@ -13,6 +13,7 @@ import { ProductsModule } from './app/products/products.module';
 import { ConfigurationModule } from './config/configuration.module';
 import { WinstonModule } from 'nest-winston';
 import { loggerOptions } from './utils';
+import { ReportsModule } from './app/reports/reports.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { loggerOptions } from './utils';
     TerminusModule,
     ConfigurationModule,
     ProductsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
