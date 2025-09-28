@@ -64,7 +64,7 @@ jobs:
   security-check:
     runs-on: ubuntu-latest
     name: Security Audit
-    needs: test # Run security check after tests pass
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
