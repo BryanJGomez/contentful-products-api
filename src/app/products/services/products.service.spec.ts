@@ -6,6 +6,7 @@ import { Products } from '../entities/product.entity';
 import { SearchQueryParamsDto } from '../dto/product.dto';
 import { InsertResult } from 'typeorm';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { IUpdateResult } from '../interface/producto.interface';
 
 describe('ProductsService (unit)', () => {
   let service: ProductsService;
@@ -16,6 +17,8 @@ describe('ProductsService (unit)', () => {
     const repoMock: Partial<jest.Mocked<ProductsRepository>> = {
       findAll: jest.fn(),
       productUpsert: jest.fn(),
+      updateStatus: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const contenfulServiceMock: Partial<jest.Mocked<ContenfulService>> = {
@@ -184,6 +187,43 @@ describe('ProductsService (unit)', () => {
       );
       // Verify the result
       expect(result).toEqual(mockUpsertResults);
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should update product status successfully', async () => {
+      const productId = '123e4567-e89b-12d3-a456-426614174000';
+      const mockProduct = {
+        id: productId,
+        externalId: 'EXT1',
+        sku: 'SKU1',
+        name: 'Test Product',
+        brand: 'Brand',
+        model: 'Model X',
+        category: 'Cat',
+        color: 'Red',
+        price: 100,
+        currency: 'USD',
+        stock: 10,
+        isDeleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: undefined,
+      };
+      const mockUpdateResult: IUpdateResult = {
+        generatedMaps: [],
+        affected: 1,
+        raw: {},
+      };
+
+      repo.findOne.mockResolvedValue(mockProduct);
+      repo.updateStatus.mockResolvedValue(mockUpdateResult);
+
+      const result = await service.updateStatus(productId);
+
+      expect(jest.spyOn(repo, 'findOne')).toHaveBeenCalledWith(productId);
+      expect(jest.spyOn(repo, 'updateStatus')).toHaveBeenCalledWith(productId);
+      expect(result).toEqual(mockUpdateResult);
     });
   });
   //
