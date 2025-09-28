@@ -1,98 +1,142 @@
+# Contentful Products API
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Descripción
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+API RESTful desarrollada con NestJS para la gestión de productos integrada con Contentful CMS.
+Incluye autenticación JWT, manejo de base de datos PostgreSQL con TypeORM, y documentación automática con Swagger.
 
-## Description
+## Características principales
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Autenticación JWT** con guards personalizados
+- **Base de datos PostgreSQL** con migraciones y seeders
+- **Desarrollo con Docker** completamente containerizado
+- **Documentación Swagger** automática
+- **Testing completo** con Jest (unitarios e integración)
+- **Linting y formateo** con ESLint y Prettier
+- **Arquitectura modular** siguiendo principios SOLID
+- **Integración con Contentful CMS**
 
-## Project setup
+## Prerrequisitos
 
-```bash
-$ npm install
-```
+Antes de comenzar, asegúrate de tener instalado:
 
-## Compile and run the project
+- **Docker** >= 20.0
+- **Docker Compose** >= 2.0
+- **Git**
+- **VS Code** (recomendado para aprovechar las tasks configuradas)
+
+## Setup inicial
+
+### 1. Clonar el repositorio
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone <repository-url>
+cd contentful-products-api
 ```
 
-## Run tests
+### 2. Configurar variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp env.example .env
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 3. Construir y ejecutar con Docker
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Construir e iniciar todos los servicios
+docker-compose up --build
+
+# Solo construir la aplicación
+docker-compose up app --build
+
+# Ejecutar en background
+docker-compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+La aplicación estará disponible en:
 
-## Resources
+- **API**: http://localhost:3000
+- **Swagger**: http://localhost:3000/api
+- **PostgreSQL**: localhost:5433
 
-Check out a few resources that may come in handy when working with NestJS:
+## Base de datos y migraciones
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Ejecutar migraciones
 
-## Support
+```bash
+# Ejecutar todas las migraciones pendientes
+docker-compose run --rm app npm run migration:run
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Ejecutar migraciones y seeders
+docker-compose run --rm app npm run migration:run:seed
+```
 
-## Stay in touch
+### Crear nueva migración
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Generar migración basada en cambios en entidades
+docker-compose run --rm app npm run migration:generate -- src/db/migrations/NombreDeLaMigracion
 
-## License
+# Crear migración vacía
+docker-compose run --rm app npm run typeorm -- migration:create src/db/migrations/NombreDeLaMigracion
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Revertir migración
+
+```bash
+# Revertir la última migración
+docker-compose run --rm app npm run migration:revert
+```
+
+### Poblar datos de prueba (Seeders)
+
+```bash
+# Ejecutar seeders manualmente
+docker-compose run --rm app npm run seed
+
+```
+
+Los seeders incluyen productos de ejemplo con diferentes categorías, marcas y precios.
+
+## 🧪 Ejecutar tests
+
+El proyecto incluye tasks de VS Code configuradas para facilitar la ejecución de tests.
+
+### Usando VS Code Tasks
+
+1. Abrir **Command Palette** (`Ctrl+Shift+P` o `Cmd+Shift+P`)
+2. Ejecutar **Tasks: Run Task**
+3. Seleccionar una de las opciones disponibles:
+
+#### Tests disponibles:
+
+- **`Test Current File with Coverage`**: Ejecutar test con cobertura en archivo actual
+- **`Test Current File`**: Ejecutar tests del archivo actual
+- **`Test All with Coverage`**: Ejecutar todos los tests con reporte de cobertura
+
+### Usando terminal
+
+```bash
+# Tests unitarios
+docker-compose run --rm app npm run test
+
+# Tests con cobertura
+docker-compose run --rm app npm run test:cov
+
+# Tests específicos
+docker-compose run --rm app npm run test -- --testPathPattern=products
+
+```
+
+## Recursos adicionales
+
+- **Swagger UI**: http://localhost:3000/api
+- **NestJS Docs**: https://docs.nestjs.com
+- **TypeORM Docs**: https://typeorm.io
+- **Docker Compose Docs**: https://docs.docker.com/compose/
