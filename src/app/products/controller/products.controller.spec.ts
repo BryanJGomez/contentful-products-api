@@ -2,16 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
 import { ProductsService } from '../services/products.service';
 import { SearchQueryParamsDto } from '../dto/product.dto';
+import { IUpdateResult } from '../interface/producto.interface';
 
 describe('ProductsController (unit)', () => {
   let controller: ProductsController;
   let service: {
     findAll: jest.Mock;
+    updateStatus: jest.Mock;
   };
 
   beforeEach(async () => {
     service = {
       findAll: jest.fn(),
+      updateStatus: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -67,5 +70,26 @@ describe('ProductsController (unit)', () => {
       expect(service.findAll).toHaveBeenCalledWith(query);
       expect(res).toEqual(expected);
     });
+  });
+
+  describe('/PATCH products/:id/status', () => {
+    it('should call service to update product status and return the result', async () => {
+      const productId = '123e4567-e89b-12d3-a456-426614174000';
+      const expectedResult: IUpdateResult = {
+        generatedMaps: [],
+        affected: 1,
+        raw: {},
+      };
+      service.updateStatus.mockResolvedValue(expectedResult);
+
+      const res = await controller.updateStatus(productId);
+
+      expect(service.updateStatus).toHaveBeenCalledWith(productId);
+      expect(res).toEqual(expectedResult);
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 });

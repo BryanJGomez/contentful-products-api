@@ -1,3 +1,4 @@
+import { ObjectLiteral } from 'typeorm';
 import { PaginatedResult } from '../../../shared/dto/paginated-result.dto';
 
 export interface IProduct {
@@ -18,4 +19,9 @@ export interface IProduct {
   deletedAt?: Date | null;
 }
 
+export interface IUpdateResult {
+  generatedMaps: ObjectLiteral[];
+  raw: any;
+  affected?: number;
+}
 export type IResultData<T = IProduct> = PaginatedResult<T>;
