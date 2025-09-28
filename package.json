@@ -1,6 +1,6 @@
 {
   "name": "product",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "author": "Bryan Gomez",
   "private": true,
@@ -41,6 +41,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "dayjs": "^1.11.18",
     "nest-winston": "^1.10.2",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
