@@ -13,6 +13,7 @@ import {
 //
 import { Products } from '../entities/product.entity';
 import { CategoryReportResult } from '../../reports/interface/reports.interface';
+import { IUpdateResult } from '../interface/producto.interface';
 import { SearchQueryParamsDto } from '../dto/product.dto';
 import { ReportsQueryParamsDto } from '../../reports/dto/reports.dto';
 import { createDateRange } from '../../../utils/date';
@@ -128,10 +129,25 @@ export class ProductsRepository {
       .getRawMany();
   }
 
+  async findOne(id: string): Promise<Partial<Products> | null> {
+    return this.productsRepository.findOne({
+      where: {
+        id,
+      },
+      withDeleted: true,
+    });
+  }
+
   async productUpsert(product: Partial<Products>) {
     const result = await this.productsRepository.upsert(product, [
       'externalId',
     ]);
+    return result;
+  }
+  async updateStatus(id: string): Promise<IUpdateResult> {
+    const result = await this.productsRepository.update(id, {
+      isDeleted: true,
+    });
     return result;
   }
 }
