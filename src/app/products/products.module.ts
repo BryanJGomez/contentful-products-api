@@ -19,5 +19,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ProductsRepository,
   ],
   imports: [TypeOrmModule.forFeature([Products]), HttpModule],
+  exports: [ProductsRepository], // Export ProductsRepository so other modules can use it
 })
 export class ProductsModule {}

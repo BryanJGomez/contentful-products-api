@@ -9,7 +9,7 @@ export interface IProduct {
   model: string;
   category: string;
   color: string;
-  price: number;
+  price?: number | null;
   currency: string;
   stock: number;
   createdAt: Date;

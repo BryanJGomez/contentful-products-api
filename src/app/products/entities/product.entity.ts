@@ -39,8 +39,8 @@ export class Products {
   color: string;
 
   @Index()
-  @Column({ type: 'numeric', precision: 12, scale: 2 })
-  price: number;
+  @Column({ type: 'numeric', precision: 12, scale: 2, nullable: true })
+  price: number | null;
 
   @Column('varchar', { length: 3 })
   currency: string;
