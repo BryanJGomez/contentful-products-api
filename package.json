@@ -1,6 +1,6 @@
 {
   "name": "product",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "",
   "author": "Bryan Gomez",
   "private": true,
@@ -93,6 +93,12 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov",
+      "html"
+    ],
     "testEnvironment": "node"
   }
 }
