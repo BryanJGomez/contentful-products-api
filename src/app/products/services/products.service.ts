@@ -41,7 +41,7 @@ export class ProductsService {
           'No products were fetched from Contentful. Skipping upsert.',
           context,
         );
-        return;
+        return [];
       }
       //
       const upsertResults = await Promise.all(
@@ -54,6 +54,8 @@ export class ProductsService {
         ...context,
         upsertedCount: upsertResults.length,
       });
+
+      return upsertResults;
     } catch (error) {
       this.handleCronError(error, context);
     }
