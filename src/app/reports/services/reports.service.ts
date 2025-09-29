@@ -2,17 +2,17 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import { createContextWinston } from '../../../utils/logger.util';
-import {
-  CategoryReportResult,
-  NonDeletedProductsReportResponse,
-  ReportExtras,
-  ReportsDeletedProductsPercentage,
-  DeletedProductsReportResponse,
-} from '../interface/reports.interface';
 import { ReportsQueryParamsDto } from '../dto/reports.dto';
 import { paginateResult } from '../../../shared/utils/pagination.util';
-import { IProduct } from '../../products/interface/producto.interface';
+import {
+  CategoryReportResult,
+  DeletedProductsExtras,
+  DeletedProductsReportResponse,
+  NonDeletedProductsReportResponse,
+  ReportsDeletedProductsPercentage,
+} from '../../reports/interface/reports.interface';
 import { QueryParamsDto } from '../../../shared/dto/pagination.dto';
+import { IProduct } from '../../products/interface/producto.interface';
 
 @Injectable()
 export class ReportsService {
@@ -23,7 +23,7 @@ export class ReportsService {
 
   async getDeletedProductsPercentage(
     filter: QueryParamsDto,
-  ): Promise<DeletedProductsReportResponse<IProduct>> {
+  ): Promise<DeletedProductsReportResponse> {
     const context = createContextWinston(
       this.constructor.name,
       this.getDeletedProductsPercentage.name,
@@ -40,7 +40,7 @@ export class ReportsService {
         total > 0 ? parseFloat(((count / total) * 100).toFixed(2)) : 0,
     };
     //
-    return paginateResult<IProduct>(
+    return paginateResult<IProduct, ReportsDeletedProductsPercentage>(
       count,
       results,
       filter.limit,
@@ -52,7 +52,7 @@ export class ReportsService {
 
   async getNonDeletedProductsPercentages(
     filter: ReportsQueryParamsDto,
-  ): Promise<NonDeletedProductsReportResponse<IProduct>> {
+  ): Promise<NonDeletedProductsReportResponse> {
     const context = createContextWinston(
       this.constructor.name,
       this.getNonDeletedProductsPercentages.name,
@@ -62,7 +62,7 @@ export class ReportsService {
     const { results, count, total } =
       await this.productsRepository.getNonDeletedProductsPercentage(filter);
     //
-    const reportExtras: ReportExtras = {
+    const reportExtras: DeletedProductsExtras = {
       startDate: filter.startDate
         ? new Date(filter.startDate).toISOString()
         : null,
@@ -75,7 +75,7 @@ export class ReportsService {
         total > 0 ? parseFloat(((count / total) * 100).toFixed(2)) : 0,
     };
     //
-    return paginateResult<IProduct>(
+    return paginateResult<IProduct, DeletedProductsExtras>(
       count,
       results,
       filter.limit,

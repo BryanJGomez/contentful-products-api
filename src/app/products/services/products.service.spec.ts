@@ -7,10 +7,11 @@ import { SearchQueryParamsDto } from '../dto/product.dto';
 import { InsertResult } from 'typeorm';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { IUpdateResult } from '../interface/producto.interface';
+import { LoggerService } from '@nestjs/common';
 
 describe('ProductsService (unit)', () => {
   // Service and repository mocks
-  let productService: jest.Mocked<ProductsService>;
+  let productService: ProductsService; // <-- servicio real, NO jest.Mocked
   let productsRepo: jest.Mocked<ProductsRepository>;
   let contenfulService: jest.Mocked<ContenfulService>;
   // Mock implementations
@@ -23,7 +24,7 @@ describe('ProductsService (unit)', () => {
   const mockedContentfulApiService: Partial<jest.Mocked<ContenfulService>> = {
     syncProductsFromApi: jest.fn(),
   };
-  const mockLogger = {
+  const mockLogger: Partial<jest.Mocked<LoggerService>> = {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
@@ -47,6 +48,7 @@ describe('ProductsService (unit)', () => {
 
   describe('findAll', () => {
     it('should return paginated products successfully', async () => {
+      // Arrange
       const mockResults: Products[] = [
         {
           id: '1',
@@ -84,15 +86,12 @@ describe('ProductsService (unit)', () => {
         },
       ];
       const params: SearchQueryParamsDto = { page: 1, limit: 2 };
-      // Arrange
       productsRepo.findAll.mockResolvedValue({
         results: mockResults,
         count: 2,
       });
       // Spies
-      const findAllSpy = jest
-        .spyOn(productsRepo, 'findAll')
-        .mockResolvedValue({ results: mockResults, count: 2 });
+      const findAllSpy = jest.spyOn(productsRepo, 'findAll');
       // Act
       const res = await productService.findAll(params);
       // Assert
@@ -109,6 +108,7 @@ describe('ProductsService (unit)', () => {
     });
 
     it('should handle search parameters', async () => {
+      // Arrange
       const mockResults: Products[] = [];
       const params: SearchQueryParamsDto = {
         page: 1,
@@ -124,9 +124,7 @@ describe('ProductsService (unit)', () => {
         count: 0,
       });
       // Spies
-      const findAllSpy = jest
-        .spyOn(productsRepo, 'findAll')
-        .mockResolvedValue({ results: mockResults, count: 0 });
+      const findAllSpy = jest.spyOn(productsRepo, 'findAll');
       // Act
 
       const res = await productService.findAll(params);
@@ -137,8 +135,9 @@ describe('ProductsService (unit)', () => {
     });
   });
 
-  describe('syncProductsFromApi', () => {
+  describe('syncProducts', () => {
     it('should successfully sync products from Contentful', async () => {
+      // Arrange
       const mockContentfulProducts: Partial<Products>[] = [
         {
           externalId: 'contentful-1',
@@ -177,31 +176,27 @@ describe('ProductsService (unit)', () => {
       productsRepo.productUpsert
         .mockResolvedValueOnce(mockUpsertResults[0])
         .mockResolvedValueOnce(mockUpsertResults[1]);
+
       // Spies
-      const syncSpy = jest
-        .spyOn(contenfulService, 'syncProductsFromApi')
-        .mockResolvedValue(mockContentfulProducts);
-      //
-      const upsertSpy = jest
-        .spyOn(productsRepo, 'productUpsert')
-        .mockResolvedValueOnce(mockUpsertResults[0])
-        .mockResolvedValueOnce(mockUpsertResults[1]);
+      const syncSpy = jest.spyOn(contenfulService, 'syncProductsFromApi');
+      const upsertSpy = jest.spyOn(productsRepo, 'productUpsert');
+
       // Act
       const result = await productService.syncProducts();
       // Assert
       expect(syncSpy).toHaveBeenCalledTimes(1);
       expect(upsertSpy).toHaveBeenCalledTimes(2);
-      expect(upsertSpy).toHaveBeenCalledWith(mockContentfulProducts[0]);
-      expect(upsertSpy).toHaveBeenCalledWith(mockContentfulProducts[1]);
-
+      expect(upsertSpy).toHaveBeenNthCalledWith(1, mockContentfulProducts[0]);
+      expect(upsertSpy).toHaveBeenNthCalledWith(2, mockContentfulProducts[1]);
       expect(result).toEqual(mockUpsertResults);
     });
   });
 
   describe('updateStatus', () => {
     it('should update product status successfully', async () => {
+      // Arrange
       const productId = '123e4567-e89b-12d3-a456-426614174000';
-      const mockProduct = {
+      const mockProduct: Products = {
         id: productId,
         externalId: 'EXT1',
         sku: 'SKU1',
@@ -227,13 +222,8 @@ describe('ProductsService (unit)', () => {
       productsRepo.findOne.mockResolvedValue(mockProduct);
       productsRepo.updateStatus.mockResolvedValue(mockUpdateResult);
       // Spies
-      const findOneSpy = jest
-        .spyOn(productsRepo, 'findOne')
-        .mockResolvedValue(mockProduct);
-      //
-      const updateSpy = jest
-        .spyOn(productsRepo, 'updateStatus')
-        .mockResolvedValue(mockUpdateResult);
+      const findOneSpy = jest.spyOn(productsRepo, 'findOne');
+      const updateSpy = jest.spyOn(productsRepo, 'updateStatus');
 
       // Act
       const result = await productService.updateStatus(productId);
@@ -243,9 +233,8 @@ describe('ProductsService (unit)', () => {
       expect(result).toEqual(mockUpdateResult);
     });
   });
-  //
+  // clean up mocks after each test
   afterEach(() => {
-    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });

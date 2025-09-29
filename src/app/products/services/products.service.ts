@@ -1,7 +1,7 @@
 import {
   Inject,
   Injectable,
-  Logger,
+  LoggerService,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
@@ -22,7 +22,7 @@ export class ProductsService {
   constructor(
     private readonly productsRepository: ProductsRepository,
     private readonly contenfulService: ContenfulService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: LoggerService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)

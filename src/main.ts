@@ -31,22 +31,37 @@ async function bootstrap() {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'JWT',
-        description: 'Enter JWT token',
+        description: 'Enter JWT token (without Bearer prefix)',
         in: 'header',
       },
       'JWT-auth',
     )
-    .setTitle('Contentful product sync')
+    .setTitle('Contentful Products API')
     .setDescription(
-      'Documentación de la API del Backend de Contentful product sync',
+      'API RESTful para la gestión de productos integrada con Contentful CMS. ' +
+        'Incluye autenticación JWT, manejo de base de datos PostgreSQL con TypeORM, ' +
+        'y reportes de productos. Para usar los endpoints protegidos, ' +
+        'haga clic en "Authorize" e ingrese su token JWT.',
     )
     .setVersion('1.0')
+    .addTag('Application', 'Información general de la aplicación')
+    .addTag('Auth', 'Endpoints de autenticación')
+    .addTag('Products', 'Gestión de productos')
+    .addTag('Reports', 'Reportes y estadísticas')
     .build();
   // Set up Swagger module
   const document = SwaggerModule.createDocument(app, config);
   if (environmentData !== environment.production) {
     SwaggerModule.setup('docs', app, document, {
-      swaggerOptions: { defaultModelsExpandDepth: -1, docExpansion: 'none' },
+      swaggerOptions: {
+        defaultModelsExpandDepth: -1,
+        docExpansion: 'none',
+        persistAuthorization: true,
+        displayRequestDuration: true,
+        tryItOutEnabled: true,
+      },
+      customSiteTitle: 'Contentful Products API - Swagger',
+      customfavIcon: '/favicon.ico',
     });
   }
   // Enable CORS (Cross-Origin Resource Sharing)
