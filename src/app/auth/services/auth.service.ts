@@ -1,5 +1,4 @@
 import {
-  HttpException,
   Inject,
   Injectable,
   Logger,
@@ -23,45 +22,30 @@ export class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  register(createAuthDto: CreateUserDto): Promise<RegisterResponse> {
+  async register(createAuthDto: CreateUserDto): Promise<RegisterResponse> {
     const context = createContextWinston(
       this.constructor.name,
       this.register.name,
     );
-    try {
-      this.logger.log('Register user', { context, createAuthDto });
-      return this.authRepository.createUser(createAuthDto);
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to register user';
-      throw new HttpException(message, 500);
-    }
+    //
+    this.logger.log('Register user', { context, createAuthDto });
+
+    return await this.authRepository.createUser(createAuthDto);
   }
 
   async login({ email, password }: LoginUserDto): Promise<LoginResponse> {
-    let user: IUser | null;
-    let isMatch = false;
-
-    try {
-      user = await this.authRepository.findUserAuth({ email, password });
-      if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      if (user.password) {
-        isMatch = await comparePasswords(password, user.password);
-      }
-    } catch (error: unknown) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      const message =
-        error instanceof Error ? error.message : 'Failed to login user';
-      throw new HttpException(message, 500);
+    const user: IUser | null = await this.authRepository.findUserAuth({
+      email,
+      password,
+    });
+    //
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
+    const isMatch = await comparePasswords(password, user.password);
 
     if (!isMatch) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('password not valid');
     }
 
     const result = this._loginJwtReponse(user);
