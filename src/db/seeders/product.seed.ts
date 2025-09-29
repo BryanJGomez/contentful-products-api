@@ -17,6 +17,7 @@ export async function seedProducts() {
       currency: 'USD',
       stock: 7,
       deletedAt: new Date(), // Mock deleted product
+      isDeleted: true,
     },
     {
       externalId: '3ZxS5MCw4W3R8rcN1hSdQB7',
