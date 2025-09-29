@@ -1,3 +1,20 @@
+# Builder
+FROM node:20 AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies for building)
+RUN npm install --prefer-offline --no-audit --progress=false
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
 # Development
 FROM node:20 AS development
 

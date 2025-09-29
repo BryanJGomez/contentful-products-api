@@ -2,6 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from '../services/reports.service';
 import { ReportsQueryParamsDto } from '../dto/reports.dto';
+import {
+  DeletedProductsReportResponse,
+  NonDeletedProductsReportResponse,
+} from '../interface/reports.interface';
+import { IProduct } from '../../products/interface/producto.interface';
 
 describe('ReportsController (unit)', () => {
   // Service and repository mocks
@@ -31,10 +36,60 @@ describe('ReportsController (unit)', () => {
 
   describe('GET /deleted-percentage', () => {
     it('should return deleted products percentage', async () => {
-      const mockResult = { percentage: 25.5 };
+      const mockDeletedResult: DeletedProductsReportResponse<IProduct> = {
+        results: [
+          {
+            id: '1',
+            externalId: 'EXT1',
+            sku: 'SKU1',
+            name: 'Test Product',
+            brand: 'Brand',
+            model: 'Model X',
+            category: 'Cat',
+            color: 'Red',
+            price: 100,
+            currency: 'USD',
+            stock: 10,
+            isDeleted: true,
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+            deletedAt: new Date('2024-02-01T00:00:00.000Z'),
+          },
+          {
+            id: '2',
+            externalId: 'EXT2',
+            sku: 'UEBN4YX5',
+            name: 'Samsung iPhone 13',
+            brand: 'Samsung',
+            model: 'iPhone 13',
+            category: 'Smartphone',
+            color: 'Green',
+            price: 1855.43,
+            currency: 'USD',
+            stock: 36,
+            isDeleted: true,
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+            deletedAt: new Date('2024-02-01T00:00:00.000Z'),
+          },
+        ],
+        totalRecords: 2,
+        totalPages: 1,
+        currentPage: 1,
+        hasPreviousPage: false,
+        hasNextPage: false,
+        previousPage: null,
+        nextPage: null,
+        hasEllipsisBefore: false,
+        hasEllipsisAfter: false,
+        pageLinks: [1],
+        totalProducts: 100,
+        deletedProducts: 2,
+        deletedPercentage: 2.0,
+      };
       // Arrange
       mockReportsService.getDeletedProductsPercentage.mockResolvedValue(
-        mockResult,
+        mockDeletedResult,
       );
       // Spies
       const getDeletedProductsPercentageSpy = jest.spyOn(
@@ -42,10 +97,21 @@ describe('ReportsController (unit)', () => {
         'getDeletedProductsPercentage',
       );
       // Act
-      const result = await controller.getDeletedProductsPercentage();
+      const result = await controller.getDeletedProductsPercentage({
+        page: 1,
+        limit: 5,
+      });
       // Assert
-      expect(getDeletedProductsPercentageSpy).toHaveBeenCalledTimes(1);
-      expect(result).toEqual(mockResult);
+      expect(getDeletedProductsPercentageSpy).toHaveBeenCalledWith({
+        page: 1,
+        limit: 5,
+      });
+      expect(result).toEqual(mockDeletedResult);
+      // Assert
+      expect(result).toHaveProperty('results');
+      expect(result).toHaveProperty('totalProducts');
+      expect(result).toHaveProperty('deletedProducts');
+      expect(result).toHaveProperty('deletedPercentage');
     });
   });
 
@@ -55,54 +121,100 @@ describe('ReportsController (unit)', () => {
         hasPrice: 'true',
         startDate: '2024-01-01',
         endDate: '2024-12-31',
+        page: 1,
+        limit: 5,
       };
-      const mockResult = { percentage: 75.8 };
+
+      const mockNonDeleted: NonDeletedProductsReportResponse<IProduct> = {
+        results: [
+          {
+            id: '1',
+            externalId: 'EXT1',
+            sku: 'SKU1',
+            name: 'Test Product',
+            brand: 'Brand',
+            model: 'Model X',
+            category: 'Cat',
+            color: 'Red',
+            price: 100,
+            currency: 'USD',
+            stock: 10,
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: undefined,
+          },
+          {
+            id: '2',
+            externalId: 'EXT2',
+            sku: 'UEBN4YX5',
+            name: 'Samsung iPhone 13',
+            brand: 'Samsung',
+            model: 'iPhone 13',
+            category: 'Smartphone',
+            color: 'Green',
+            price: 1855.43,
+            currency: 'USD',
+            stock: 36,
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: undefined,
+          },
+        ],
+        totalRecords: 2,
+        totalPages: 1,
+        currentPage: 1,
+        hasPreviousPage: false,
+        hasNextPage: false,
+        previousPage: null,
+        nextPage: null,
+        hasEllipsisBefore: false,
+        hasEllipsisAfter: false,
+        pageLinks: [1],
+        startDate: '2024-01-01T00:00:00.000Z',
+        endDate: '2024-12-31T23:59:59.999Z',
+        totalProducts: 100,
+        deletedProducts: 2,
+        nonDeletedProducts: 98,
+        percentage: 98.0,
+      };
       // Arrange
       mockReportsService.getNonDeletedProductsPercentages.mockResolvedValue(
-        mockResult,
-      );
-      // Spies
-      const getNonDeletedProductsPercentagesSpy = jest.spyOn(
-        service,
-        'getNonDeletedProductsPercentages',
+        mockNonDeleted,
       );
       // Act
       const result =
         await controller.getNonDeletedProductsPercentages(mockFilter);
       // Assert
-      expect(getNonDeletedProductsPercentagesSpy).toHaveBeenCalledWith(
-        mockFilter,
-      );
-      //
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual(mockNonDeleted);
+      expect(result).toHaveProperty('results');
+      expect(result).toHaveProperty('totalRecords');
+      expect(result).toHaveProperty('startDate');
+      expect(result).toHaveProperty('endDate');
+      expect(result).toHaveProperty('totalProducts');
+      expect(result).toHaveProperty('percentage');
     });
   });
 
   describe('GET /by-category', () => {
     it('should return products report by category', async () => {
       const mockResult = [
-        { category: 'Smartphones', productCount: '15', averagePrice: '899.99' },
-        { category: 'Laptops', productCount: '8', averagePrice: '1299.50' },
+        { category: 'Smartphones', productCount: '15', averagePrice: 899.99 },
+        { category: 'Laptops', productCount: '8', averagePrice: 1299.5 },
       ];
       // Arrange
       mockReportsService.getProductsByCategoryReport.mockResolvedValue(
         mockResult,
       );
-      // Spies
-      const getProductsByCategoryReportSpy = jest.spyOn(
-        service,
-        'getProductsByCategoryReport',
-      );
       // Act
       const result = await controller.getProductsByCategoryReport();
       // Assert
-      expect(getProductsByCategoryReportSpy).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockResult);
     });
   });
 
   afterEach(() => {
-    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });

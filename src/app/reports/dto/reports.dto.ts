@@ -1,7 +1,8 @@
 import { IsOptional, IsBooleanString, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { QueryParamsDto } from '../../../shared/dto/pagination.dto';
 
-export class ReportsQueryParamsDto {
+export class ReportsQueryParamsDto extends QueryParamsDto {
   @ApiProperty({
     description:
       'Filter for products with or without price. Use "true" or "false".',
