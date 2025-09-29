@@ -6,7 +6,8 @@ export const paginateResult = <T>(
   limit = 5,
   page = 1,
   maxPageLinks = 5,
-): PaginatedResult<T> => {
+  extras?: Record<string, any>,
+): PaginatedResult<T> & Record<string, any> => {
   if (
     !Number.isInteger(count) ||
     !Array.isArray(results) ||
@@ -55,6 +56,7 @@ export const paginateResult = <T>(
   }
 
   return {
+    ...extras,
     results,
     totalRecords: count,
     totalPages,

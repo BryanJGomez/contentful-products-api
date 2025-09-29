@@ -17,6 +17,7 @@ import { IUpdateResult } from '../interface/producto.interface';
 import { SearchQueryParamsDto } from '../dto/product.dto';
 import { ReportsQueryParamsDto } from '../../reports/dto/reports.dto';
 import { createDateRange } from '../../../utils/date';
+import { QueryParamsDto } from '../../../shared/dto/pagination.dto';
 @Injectable()
 export class ProductsRepository {
   constructor(
@@ -31,7 +32,10 @@ export class ProductsRepository {
     category,
     minPrice,
     maxPrice,
-  }: SearchQueryParamsDto) {
+  }: SearchQueryParamsDto): Promise<{
+    results: Products[];
+    count: number;
+  }> {
     const skip = (Number(page) - 1) * Number(limit);
     // filter base (not deleted)
     const where: FindOptionsWhere<Products> = {
@@ -63,58 +67,79 @@ export class ProductsRepository {
     return { results, count };
   }
 
-  async getDeletedProductsPercentage(): Promise<{ percentage: number }> {
-    const [total, deleted] = await Promise.all([
+  async getDeletedProductsPercentage({ page, limit }: QueryParamsDto): Promise<{
+    results: Products[];
+    count: number;
+    total: number;
+  }> {
+    const skip = (Number(page) - 1) * Number(limit);
+    const [total, [results, count]] = await Promise.all([
       this.productsRepository.count(),
-      this.productsRepository.count({
+      this.productsRepository.findAndCount({
         where: {
           deletedAt: Not(IsNull()),
           isDeleted: true,
         },
         withDeleted: true,
+        skip,
+        take: limit,
+        order: {
+          createdAt: 'DESC',
+        },
       }),
     ]);
-    const percentage =
-      total > 0 ? parseFloat(((deleted / total) * 100).toFixed(2)) : 0;
-    return { percentage };
+
+    return { results, count, total };
   }
 
-  async getNonDeletedProductsPercentage(
-    filter: ReportsQueryParamsDto,
-  ): Promise<{ percentage: number }> {
-    // TypeORM automatically filters deleted items (deletedAt IS NULL)
-    const totalNonDeleted = await this.productsRepository.count({
-      where: {
-        isDeleted: false,
-        deletedAt: IsNull(),
-      },
-    });
-    //  return if there are no non-deleted products
-    if (totalNonDeleted === 0) return { percentage: 0 };
-    // Build the where clause based on filters
+  async getNonDeletedProductsPercentage({
+    page,
+    limit,
+    hasPrice,
+    startDate,
+    endDate,
+  }: ReportsQueryParamsDto): Promise<{
+    results: Products[];
+    count: number;
+    total: number;
+  }> {
+    const skip = (Number(page) - 1) * Number(limit);
     const where: FindOptionsWhere<Products> = {
       isDeleted: false,
       deletedAt: IsNull(),
     };
-    // Add a filter for products that have a price or not
-    if (filter.hasPrice === 'true') {
+    if (hasPrice === 'true') {
       where.price = Not(IsNull());
-    } else if (filter.hasPrice === 'false') {
+    } else if (hasPrice === 'false') {
       where.price = IsNull();
     }
-    // Add a date filter for products created with in a date range
-    if (filter.startDate && filter.endDate) {
-      const dateRange = createDateRange(filter.startDate, filter.endDate);
+    if (startDate && endDate) {
+      const dateRange = createDateRange(startDate, endDate);
       where.createdAt = Between(dateRange.startDate, dateRange.endDate);
     }
-    // Get the count of products that match the filters
-    const filteredCount = await this.productsRepository.count({
-      where,
-      withDeleted: true,
-    });
-    // Calculate the final percentage
-    const percentage = (filteredCount / totalNonDeleted) * 100;
-    return { percentage };
+
+    const [totalNonDeleted, [results, count]] = await Promise.all([
+      this.productsRepository.count({
+        where: {
+          isDeleted: false,
+          deletedAt: IsNull(),
+        },
+      }),
+      this.productsRepository.findAndCount({
+        where,
+        withDeleted: true,
+        skip,
+        take: limit,
+        order: {
+          createdAt: 'DESC',
+        },
+      }),
+    ]);
+
+    if (totalNonDeleted === 0) {
+      return { results: [], count: 0, total: 0 };
+    }
+    return { results, count, total: totalNonDeleted };
   }
 
   async getProductsByCategoryReport(): Promise<CategoryReportResult[]> {
@@ -146,6 +171,7 @@ export class ProductsRepository {
   }
   async updateStatus(id: string): Promise<IUpdateResult> {
     const result = await this.productsRepository.update(id, {
+      deletedAt: new Date(),
       isDeleted: true,
     });
     return result;
