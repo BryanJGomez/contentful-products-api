@@ -34,7 +34,7 @@ Antes de comenzar, asegúrate de tener instalado:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:BryanJGomez/contentful-products-api.git
 cd contentful-products-api
 ```
 
