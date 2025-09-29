@@ -43,10 +43,18 @@ cd contentful-products-api
 Crea un archivo `.env` en la raíz del proyecto:
 
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
-### 3. Construir y ejecutar con Docker
+### 3. Instalar dependencias (para VS Code IntelliSense)
+
+> **Nota**: Las dependencias se instalan automáticamente en el contenedor Docker, pero es recomendable instalarlas localmente para evitar errores de linting y autocompletado en VS Code.
+
+```bash
+npm install
+```
+
+### 4. Construir y ejecutar con Docker
 
 ```bash
 # Construir e iniciar todos los servicios
@@ -104,6 +112,31 @@ docker-compose run --rm app npm run seed
 
 Los seeders incluyen productos de ejemplo con diferentes categorías, marcas y precios.
 
+## 🔐 Autenticación y acceso a módulos privados
+
+La API utiliza autenticación JWT para proteger ciertos endpoints. Para acceder a los módulos privados, es necesario autenticarse e incluir el token en las cabeceras de las peticiones.
+
+### 1. Registro de nuevo usuario
+
+Si no tienes una cuenta, primero debes registrarte:
+
+**Endpoint:** `POST /auth/register`
+
+### 2. Iniciar sesión
+
+Una vez registrado, inicia sesión para obtener tu token:
+
+**Endpoint:** `POST /auth/login`
+
+### 3. Usar el token en peticiones autenticadas
+
+Para acceder a endpoints protegidos, incluye el token en la cabecera `Authorization`:
+
+```bash
+curl -X GET http://localhost:3000/protected-endpoint \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
 ## 🧪 Ejecutar tests
 
 El proyecto incluye tasks de VS Code configuradas para facilitar la ejecución de tests.
@@ -136,7 +169,7 @@ docker-compose run --rm app npm run test -- --testPathPattern=products
 
 ## Recursos adicionales
 
-- **Swagger UI**: http://localhost:3000/api
+- **Swagger UI**: http://localhost:3000/docs
 - **NestJS Docs**: https://docs.nestjs.com
 - **TypeORM Docs**: https://typeorm.io
 - **Docker Compose Docs**: https://docs.docker.com/compose/

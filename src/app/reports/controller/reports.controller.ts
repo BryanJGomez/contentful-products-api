@@ -2,7 +2,13 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ReportsService } from '../services/reports.service';
 import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReportsQueryParamsDto } from '../dto/reports.dto';
-import { CategoryReportResult } from '../interface/reports.interface';
+import {
+  CategoryReportResult,
+  DeletedProductsReportResponse,
+  NonDeletedProductsReportResponse,
+} from '../interface/reports.interface';
+import { QueryParamsDto } from '../../../shared/dto/pagination.dto';
+import { IProduct } from '../../products/interface/producto.interface';
 
 @ApiTags('Reports')
 @ApiBearerAuth('JWT-auth')
@@ -12,15 +18,17 @@ export class ReportsController {
 
   @Get('deleted-percentage')
   @ApiOperation({ summary: 'Get deleted products percentage' })
-  getDeletedProductsPercentage(): Promise<{ percentage: number }> {
-    return this.reportsService.getDeletedProductsPercentage();
+  getDeletedProductsPercentage(
+    @Query() filter: QueryParamsDto,
+  ): Promise<DeletedProductsReportResponse<IProduct>> {
+    return this.reportsService.getDeletedProductsPercentage(filter);
   }
 
   @Get('non-deleted-percentages')
   @ApiOperation({ summary: 'Get non-deleted products percentage with filters' })
   getNonDeletedProductsPercentages(
     @Query() filter: ReportsQueryParamsDto,
-  ): Promise<{ percentage: number }> {
+  ): Promise<NonDeletedProductsReportResponse<IProduct>> {
     return this.reportsService.getNonDeletedProductsPercentages(filter);
   }
 

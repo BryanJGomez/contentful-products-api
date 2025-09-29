@@ -16,14 +16,10 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "files.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
     "**/coverage": true,
     "**/.git": true
   },
   "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
     "**/coverage": true
   },
   "jest.testMatch": ["**/src/**/*.spec.ts", "**/test/**/*.e2e-spec.ts"],
