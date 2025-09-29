@@ -1,10 +1,22 @@
+import { PaginatedResult } from '../../../shared/dto/paginated-result.dto';
+import { IProduct } from '../../products/interface/producto.interface';
+
 export interface CategoryReportResult {
   category: string;
   productCount: string;
   averagePrice: string;
 }
 
-export interface ReportExtras {
+export interface ReportsDeletedProductsPercentage {
+  totalProducts: number;
+  deletedProducts: number;
+  deletedPercentage: number;
+}
+
+export type DeletedProductsReportResponse = PaginatedResult<IProduct> &
+  ReportsDeletedProductsPercentage;
+
+export interface DeletedProductsExtras {
   startDate?: string | null;
   endDate?: string | null;
   hasPrice?: boolean | string;
@@ -14,45 +26,5 @@ export interface ReportExtras {
   percentage?: number;
 }
 
-export interface ReportsDeletedProductsPercentage {
-  totalProducts: number;
-  deletedProducts: number;
-  deletedPercentage: number;
-}
-
-export interface NonDeletedProductsReportResponse<T = any> {
-  results: T[];
-  totalRecords: number;
-  totalPages: number;
-  currentPage: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-  previousPage: number | null;
-  nextPage: number | null;
-  hasEllipsisBefore: boolean;
-  hasEllipsisAfter: boolean;
-  pageLinks: any[];
-  startDate?: string | null;
-  endDate?: string | null;
-  totalProducts?: number;
-  deletedProducts?: number;
-  nonDeletedProducts?: number;
-  percentage?: number;
-}
-
-export interface DeletedProductsReportResponse<T = any> {
-  results: T[];
-  totalRecords: number;
-  totalPages: number;
-  currentPage: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-  previousPage: number | null;
-  nextPage: number | null;
-  hasEllipsisBefore: boolean;
-  hasEllipsisAfter: boolean;
-  pageLinks: any[];
-  totalProducts?: number;
-  deletedProducts?: number;
-  deletedPercentage?: number;
-}
+export type NonDeletedProductsReportResponse = PaginatedResult<IProduct> &
+  DeletedProductsExtras;

@@ -1,13 +1,13 @@
-import { PaginatedResult } from '../dto/paginated-result.dto';
+import { PageLink, PaginatedResult } from '../dto/paginated-result.dto';
 
-export const paginateResult = <T>(
+export const paginateResult = <T, E extends object = object>(
   count: number,
   results: T[],
   limit = 5,
   page = 1,
   maxPageLinks = 5,
-  extras?: Record<string, any>,
-): PaginatedResult<T> & Record<string, any> => {
+  extras?: E,
+): PaginatedResult<T> & E => {
   if (
     !Number.isInteger(count) ||
     !Array.isArray(results) ||
@@ -26,7 +26,7 @@ export const paginateResult = <T>(
   const hasEllipsisBefore = currentPage > (maxPageLinks + 1) / 2;
   const hasEllipsisAfter = currentPage < totalPages - (maxPageLinks - 1) / 2;
 
-  const pageLinks: any[] = [];
+  const pageLinks: PageLink[] = [];
   for (let i = 1; i <= totalPages; i++) {
     if (
       i === 1 ||
@@ -56,7 +56,7 @@ export const paginateResult = <T>(
   }
 
   return {
-    ...extras,
+    ...(extras as E),
     results,
     totalRecords: count,
     totalPages,
