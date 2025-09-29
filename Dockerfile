@@ -1,26 +1,35 @@
-FROM node:20-alpine AS builder
+# Development
+FROM node:20 AS development
+
+# Set environment variable for development
+ENV NODE_ENV=$NODE_ENV
+ENV PORT=$PORT
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Install app dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install --prefer-offline --no-audit --progress=false
 
-# Copy source code
-COPY . .
+# Configure permissions for the 'node' user
+RUN chown -R node:node .
 
-# Build the app
-RUN npm run build
+# Change to the 'node' user to avoid running as root
+USER node
 
-# Create production image
-FROM node:20-alpine AS production
+# Expose port
+EXPOSE $PORT
+
+# Start application in development mode
+CMD ["npm", "run", "start:debug"]
+
+# Production stage
+FROM node:20 AS production
 
 # Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
+ENV NODE_ENV=$NODE_ENV
+ENV PORT=$PORT
 ENV NODE_OPTIONS=--enable-source-maps
 
 # Set working directory
@@ -42,7 +51,7 @@ RUN chown -R node:node .
 USER node
 
 # Expose port
-EXPOSE 3000
+EXPOSE $PORT
 
 # Start application
 CMD ["node", "dist/main"]

@@ -1,6 +1,6 @@
 {
   "name": "product",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "",
   "author": "Bryan Gomez",
   "private": true,
@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage --runInBand --verbose --silent",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky",
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){ process.exit(1)} \" || husky",
     "migration:generate": "npm run typeorm -- migration:generate -d src/db/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/db/data-source.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/db/data-source.ts",
