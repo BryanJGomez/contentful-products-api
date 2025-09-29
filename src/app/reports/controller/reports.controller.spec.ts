@@ -5,8 +5,7 @@ import { ReportsQueryParamsDto } from '../dto/reports.dto';
 import {
   DeletedProductsReportResponse,
   NonDeletedProductsReportResponse,
-} from '../interface/reports.interface';
-import { IProduct } from '../../products/interface/producto.interface';
+} from '../../reports/interface/reports.interface';
 
 describe('ReportsController (unit)', () => {
   // Service and repository mocks
@@ -36,7 +35,7 @@ describe('ReportsController (unit)', () => {
 
   describe('GET /deleted-percentage', () => {
     it('should return deleted products percentage', async () => {
-      const mockDeletedResult: DeletedProductsReportResponse<IProduct> = {
+      const mockDeletedResult: DeletedProductsReportResponse = {
         results: [
           {
             id: '1',
@@ -125,7 +124,7 @@ describe('ReportsController (unit)', () => {
         limit: 5,
       };
 
-      const mockNonDeleted: NonDeletedProductsReportResponse<IProduct> = {
+      const mockNonDeleted: NonDeletedProductsReportResponse = {
         results: [
           {
             id: '1',
