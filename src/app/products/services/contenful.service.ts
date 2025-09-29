@@ -37,7 +37,7 @@ export class ContenfulService {
     const result = await this.httpService.get<
       ContentfulApiResponse<ContentfulProductFields>
     >(
-      `${apiUrl}/spaces/${spaceId}/environmentss/${environment}/entries?access_token=${accessToken}&content_type=${contentType}`,
+      `${apiUrl}/spaces/${spaceId}/environments/${environment}/entries?access_token=${accessToken}&content_type=${contentType}`,
     );
     //
     // Check if we got data
