@@ -5,28 +5,25 @@ import { SearchQueryParamsDto } from '../dto/product.dto';
 import { IUpdateResult } from '../interface/producto.interface';
 
 describe('ProductsController (unit)', () => {
+  // Service and repository mocks
   let controller: ProductsController;
-  let service: {
-    findAll: jest.Mock;
-    updateStatus: jest.Mock;
+  // Mock implementations
+  const mockProductsService = {
+    findAll: jest.fn(),
+    updateStatus: jest.fn(),
   };
 
   beforeEach(async () => {
-    service = {
-      findAll: jest.fn(),
-      updateStatus: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [{ provide: ProductsService, useValue: service }],
+      providers: [{ provide: ProductsService, useValue: mockProductsService }],
     }).compile();
-
+    // Get instances of service and repository
     controller = module.get<ProductsController>(ProductsController);
   });
 
   describe('/GET products', () => {
-    it('llama al service con los query params y retorna su resultado', async () => {
+    it('should call service with query params and return its result', async () => {
       const query: SearchQueryParamsDto = { page: 2, limit: 5 };
       const expected = {
         results: [],
@@ -38,11 +35,14 @@ describe('ProductsController (unit)', () => {
         previousPage: 1,
         nextPage: null,
       };
-      service.findAll.mockResolvedValue(expected);
-
+      // Arrange
+      mockProductsService.findAll.mockResolvedValue(expected);
+      // Spies
+      const findAllSpy = jest.spyOn(mockProductsService, 'findAll');
+      // Act
       const res = await controller.findAll(query);
-
-      expect(service.findAll).toHaveBeenCalledWith(query);
+      // Assert
+      expect(findAllSpy).toHaveBeenCalledWith(query);
       expect(res).toEqual(expected);
     });
 
@@ -63,11 +63,14 @@ describe('ProductsController (unit)', () => {
         previousPage: null,
         nextPage: null,
       };
-      service.findAll.mockResolvedValue(expected);
-
+      // Arrange
+      mockProductsService.findAll.mockResolvedValue(expected);
+      // Spies
+      const findAllSpy = jest.spyOn(mockProductsService, 'findAll');
+      // Act
       const res = await controller.findAll(query);
-
-      expect(service.findAll).toHaveBeenCalledWith(query);
+      // Assert
+      expect(findAllSpy).toHaveBeenCalledWith(query);
       expect(res).toEqual(expected);
     });
   });
@@ -80,16 +83,20 @@ describe('ProductsController (unit)', () => {
         affected: 1,
         raw: {},
       };
-      service.updateStatus.mockResolvedValue(expectedResult);
-
+      // Arrange
+      mockProductsService.updateStatus.mockResolvedValue(expectedResult);
+      // Spies
+      const updateStatusSpy = jest.spyOn(mockProductsService, 'updateStatus');
+      // Act
       const res = await controller.updateStatus(productId);
-
-      expect(service.updateStatus).toHaveBeenCalledWith(productId);
+      // Assert
+      expect(updateStatusSpy).toHaveBeenCalledWith(productId);
       expect(res).toEqual(expectedResult);
     });
   });
 
   afterEach(() => {
+    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });

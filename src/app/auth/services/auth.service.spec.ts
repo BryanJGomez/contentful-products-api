@@ -13,11 +13,8 @@ jest.mock('../../../utils/encryption', () => ({
   comparePasswords: jest.fn(),
 }));
 
-describe('AuthService', () => {
-  let service: AuthService;
-  let jwtService: JwtService;
-  let authRepository: AuthRepository;
-
+describe('AuthService (unit)', () => {
+  // Mock data
   const mockUser: IUser = {
     id: '1',
     email: 'test@example.com',
@@ -25,18 +22,24 @@ describe('AuthService', () => {
     password: '$2b$10$hashedPassword',
     isActive: true,
   };
+  // Service and repository mocks
+  let service: AuthService;
+  let jwtService: JwtService;
+  let authRepository: AuthRepository;
+  // Mock implementations
 
   const mockJwtService = {
     sign: jest.fn(),
   };
-
   const mockAuthRepository = {
     createUser: jest.fn(),
     findUserAuth: jest.fn(),
   };
-
   const mockLogger = {
     log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -57,29 +60,28 @@ describe('AuthService', () => {
         },
       ],
     }).compile();
-
+    // Get instances of service and repository
     service = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
     authRepository = module.get<AuthRepository>(AuthRepository);
   });
 
-  describe('POST /auth/register', () => {
+  describe('register', () => {
     it('should register a new user successfully', async () => {
       const createUserDto: CreateUserDto = {
         email: 'test@example.com',
         password: 'Password123!',
         fullName: 'Test User',
       };
-
+      // arrange
       mockAuthRepository.createUser.mockResolvedValue(mockUser);
-
+      // Spies
+      const createUserSpy = jest.spyOn(authRepository, 'createUser');
+      // act
       const result = await service.register(createUserDto);
-
+      // assert
+      expect(createUserSpy).toHaveBeenCalledWith(createUserDto);
       expect(result).toEqual(mockUser);
-
-      expect(jest.spyOn(authRepository, 'createUser')).toHaveBeenCalledWith(
-        createUserDto,
-      );
     });
 
     it('should throw HttpException when asynchronous error occurs', async () => {
@@ -88,16 +90,16 @@ describe('AuthService', () => {
         password: 'Password123!',
         fullName: 'Test User',
       };
-
+      // arrange
       mockAuthRepository.createUser.mockRejectedValue(
         new Error('Database error'),
       );
-
+      // act & assert
       await expect(service.register(createUserDto)).rejects.toThrow(Error);
     });
   });
 
-  describe('POST /auth/login', () => {
+  describe('login', () => {
     const loginDto: LoginUserDto = {
       email: 'test@example.com',
       password: 'Password123!',
@@ -108,50 +110,59 @@ describe('AuthService', () => {
     });
 
     it('should login user successfully', async () => {
+      // Arrange
       const token = 'jwt-token';
       mockAuthRepository.findUserAuth.mockResolvedValue(mockUser);
       (encryption.comparePasswords as jest.Mock).mockResolvedValue(true);
       mockJwtService.sign.mockReturnValue(token);
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      const signSpy = jest.spyOn(jwtService, 'sign');
+      // Act
       const result = await service.login(loginDto);
-
+      // Assert
       expect(result).toEqual({
         user: { id: mockUser.id, email: mockUser.email },
         token,
       });
-
-      expect(jest.spyOn(authRepository, 'findUserAuth')).toHaveBeenCalledWith(
-        loginDto,
-      );
+      //
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
       expect(encryption.comparePasswords).toHaveBeenCalledWith(
         loginDto.password,
         mockUser.password,
       );
-
-      expect(jest.spyOn(jwtService, 'sign')).toHaveBeenCalledWith({
+      //
+      expect(signSpy).toHaveBeenCalledWith({
         id: mockUser.id,
         email: mockUser.email,
       });
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
+      // Arrange
       mockAuthRepository.findUserAuth.mockResolvedValue(null);
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      // Act + Assert
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(jest.spyOn(authRepository, 'findUserAuth')).toHaveBeenCalledWith(
-        loginDto,
-      );
+      // Assert
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
     });
 
     it('should throw UnauthorizedException when password does not match', async () => {
+      // Arrange
       mockAuthRepository.findUserAuth.mockResolvedValue(mockUser);
       (encryption.comparePasswords as jest.Mock).mockResolvedValue(false);
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      // Act + Assert
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
+      // Assert
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
       expect(encryption.comparePasswords).toHaveBeenCalledWith(
         loginDto.password,
         mockUser.password,
@@ -159,18 +170,20 @@ describe('AuthService', () => {
     });
 
     it('should handle user without password', async () => {
-      const userWithoutPassword: IUser = {
-        ...mockUser,
-        password: '',
-      };
+      // Arrange
+      const userWithoutPassword: IUser = { ...mockUser, password: '' };
       mockAuthRepository.findUserAuth.mockResolvedValue(userWithoutPassword);
       (encryption.comparePasswords as jest.Mock).mockImplementation(() => {
         throw new UnauthorizedException('password not valid');
       });
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      // Act + Assert
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
+      // Assert
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
       expect(encryption.comparePasswords).toHaveBeenCalledWith(
         loginDto.password,
         userWithoutPassword.password,
@@ -178,26 +191,36 @@ describe('AuthService', () => {
     });
 
     it('should throw HttpException when repository fails', async () => {
+      // Arrange
       mockAuthRepository.findUserAuth.mockRejectedValue(
         new Error('Database error'),
       );
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      // Act + Assert
       await expect(service.login(loginDto)).rejects.toThrow(Error);
+      // Assert
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
     });
 
     it('should rethrow UnauthorizedException from repository', async () => {
+      // Arrange
       mockAuthRepository.findUserAuth.mockRejectedValue(
         new UnauthorizedException('Invalid credentials'),
       );
-
+      // Spies
+      const findUserSpy = jest.spyOn(authRepository, 'findUserAuth');
+      // Act + Assert
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
+      // Assert
+      expect(findUserSpy).toHaveBeenCalledWith(loginDto);
     });
   });
 
   afterEach(() => {
-    // Limpia todos los mocks
+    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });
