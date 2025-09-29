@@ -1,3 +1,6 @@
+export type Ellipsis = '...';
+export type PageLink = number | Ellipsis;
+
 export interface PaginationMeta {
   totalRecords: number;
   totalPages: number;
@@ -8,7 +11,7 @@ export interface PaginationMeta {
   nextPage: number | null;
   hasEllipsisBefore: boolean;
   hasEllipsisAfter: boolean;
-  pageLinks: any[];
+  pageLinks: PageLink[];
 }
 
 export interface PaginatedResult<T> extends PaginationMeta {
