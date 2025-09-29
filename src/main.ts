@@ -44,7 +44,7 @@ async function bootstrap() {
         'haga clic en "Authorize" e ingrese su token JWT.',
     )
     .setVersion('1.0')
-    .addTag('Application', 'Información general de la aplicación')
+    .addTag('App', 'Información general de la aplicación')
     .addTag('Auth', 'Endpoints de autenticación')
     .addTag('Products', 'Gestión de productos')
     .addTag('Reports', 'Reportes y estadísticas')
