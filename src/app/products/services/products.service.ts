@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -9,6 +15,7 @@ import { IResultData, IProduct } from '../interface/producto.interface';
 import { createContextWinston } from '../../../utils/logger.util';
 import { ContenfulService } from './contenful.service';
 import { IUpdateResult } from '../interface/producto.interface';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class ProductsService {
@@ -20,20 +27,36 @@ export class ProductsService {
 
   @Cron(CronExpression.EVERY_HOUR)
   async syncProducts() {
-    const fetchProducts = await this.contenfulService.syncProductsFromApi();
-    const upsertResults = await Promise.all(
-      fetchProducts.map((product) =>
-        this.productsRepository.productUpsert(product),
-      ),
+    const context = createContextWinston(
+      this.constructor.name,
+      this.syncProducts.name,
     );
-    this.logger.log('Contentful products sync job completed', {
-      context: createContextWinston(
-        this.constructor.name,
-        this.syncProducts.name,
-      ),
-      upsertedCount: upsertResults.length,
-    });
-    return upsertResults;
+    try {
+      this.logger.log('Starting Contentful products sync job', context);
+
+      const fetchedProducts = await this.contenfulService.syncProductsFromApi();
+
+      if (!fetchedProducts || fetchedProducts.length === 0) {
+        this.logger.warn(
+          'No products were fetched from Contentful. Skipping upsert.',
+          context,
+        );
+        return;
+      }
+      //
+      const upsertResults = await Promise.all(
+        fetchedProducts.map((product) =>
+          this.productsRepository.productUpsert(product),
+        ),
+      );
+
+      this.logger.log('Contentful products sync job completed', {
+        ...context,
+        upsertedCount: upsertResults.length,
+      });
+    } catch (error) {
+      this.handleCronError(error, context);
+    }
   }
 
   async findAll(filter: SearchQueryParamsDto): Promise<IResultData<IProduct>> {
@@ -56,14 +79,43 @@ export class ProductsService {
     const product = await this.productsRepository.findOne(id);
     if (!product) {
       this.logger.warn('Product not found', { context, id });
-      throw new Error('Product not found');
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
     // Check if the product is already deleted
     if (product.isDeleted) {
       this.logger.warn('Product is already deleted', { context, id });
-      throw new Error('Product is already deleted');
+      throw new ConflictException('Product is already deleted');
     }
-    //
     return await this.productsRepository.updateStatus(id);
+  }
+
+  // Special error handler for cron job
+  private handleCronError(error: unknown, context: any) {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      const message =
+        (error.response?.data as { message?: string })?.message ||
+        error.message;
+      this.logger.error(
+        `Axios Error during Contentful sync (Status: ${status}): ${message}`,
+        {
+          ...context,
+          stack: error.stack,
+        },
+      );
+    } else if (error instanceof Error) {
+      this.logger.error(
+        `An unexpected error occurred during Contentful sync: ${error.message}`,
+        {
+          ...context,
+          stack: error.stack,
+        },
+      );
+    } else {
+      this.logger.error(
+        `An unknown error occurred during Contentful sync: ${String(error)}`,
+        context,
+      );
+    }
   }
 }

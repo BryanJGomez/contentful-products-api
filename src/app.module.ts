@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule } from '@nestjs/terminus';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WinstonModule } from 'nest-winston';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 
 import { ConfigurationService } from './config/services/configuration.service';
 import { AppController } from './app.controller';
@@ -17,6 +17,8 @@ import { ReportsModule } from './app/reports/reports.module';
 import { AuthModule } from './app/auth/auth.module';
 import { JwtAuthGuard } from './app/auth/guards/jwt-auth.guard';
 import { loggerOptions } from './utils';
+import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -57,6 +59,19 @@ import { loggerOptions } from './utils';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Global Exception Filters
+    {
+      provide: APP_FILTER,
+      useClass: DatabaseExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })
