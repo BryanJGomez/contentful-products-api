@@ -5,22 +5,21 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import { ReportsQueryParamsDto } from '../dto/reports.dto';
 
-describe('ReportsService', () => {
-  let service: ReportsService;
+describe('ReportsService (unit)', () => {
+  // Service and repository mocks
+  let reportsService: ReportsService;
   let productsRepository: ProductsRepository;
-
+  // Mock implementations
   const mockProductsRepository = {
     getDeletedProductsPercentage: jest.fn(),
     getNonDeletedProductsPercentage: jest.fn(),
     getProductsByCategoryReport: jest.fn(),
   };
-
   const loggerMock = {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
-    verbose: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -34,23 +33,27 @@ describe('ReportsService', () => {
         { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
       ],
     }).compile();
-
-    service = module.get<ReportsService>(ReportsService);
+    // Get instances of service and repository
+    reportsService = module.get<ReportsService>(ReportsService);
     productsRepository = module.get<ProductsRepository>(ProductsRepository);
   });
 
   describe('getDeletedProductsPercentage', () => {
     it('should return deleted products percentage and log the operation', async () => {
       const mockResult = { percentage: 15.75 };
+      // Arrange
       mockProductsRepository.getDeletedProductsPercentage.mockResolvedValue(
         mockResult,
       );
-
-      const result = await service.getDeletedProductsPercentage();
-
-      expect(
-        jest.spyOn(productsRepository, 'getDeletedProductsPercentage'),
-      ).toHaveBeenCalledTimes(1);
+      // Spies
+      const productSpy = jest.spyOn(
+        productsRepository,
+        'getDeletedProductsPercentage',
+      );
+      // Act
+      const result = await reportsService.getDeletedProductsPercentage();
+      // Assert
+      expect(productSpy).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockResult);
     });
   });
@@ -62,17 +65,21 @@ describe('ReportsService', () => {
         startDate: '2024-01-01',
         endDate: '2024-12-31',
       };
-      //
       const mockResult = { percentage: 84.25 };
+      // Arrange
       mockProductsRepository.getNonDeletedProductsPercentage.mockResolvedValue(
         mockResult,
       );
-
-      const result = await service.getNonDeletedProductsPercentages(mockFilter);
-
-      expect(
-        jest.spyOn(productsRepository, 'getNonDeletedProductsPercentage'),
-      ).toHaveBeenCalledWith(mockFilter);
+      // spies
+      const productSpy = jest.spyOn(
+        productsRepository,
+        'getNonDeletedProductsPercentage',
+      );
+      // Act
+      const result =
+        await reportsService.getNonDeletedProductsPercentages(mockFilter);
+      // Assert
+      expect(productSpy).toHaveBeenCalledWith(mockFilter);
       expect(result).toEqual(mockResult);
     });
   });
@@ -83,19 +90,23 @@ describe('ReportsService', () => {
         { category: 'Electronics', productCount: '25', averagePrice: '599.99' },
         { category: 'Clothing', productCount: '12', averagePrice: '89.50' },
       ];
+      // Arrange
       mockProductsRepository.getProductsByCategoryReport.mockResolvedValue(
         mockResult,
       );
-      // Execute the method
-      const result = await service.getProductsByCategoryReport();
-
-      expect(
-        jest.spyOn(productsRepository, 'getProductsByCategoryReport'),
-      ).toHaveBeenCalledTimes(1);
-
+      // spies
+      const productSpy = jest.spyOn(
+        productsRepository,
+        'getProductsByCategoryReport',
+      );
+      // Act
+      const result = await reportsService.getProductsByCategoryReport();
+      // Assert
+      expect(productSpy).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockResult);
     });
   });
+  // clean up mocks after each test
   afterEach(() => {
     jest.clearAllMocks();
   });

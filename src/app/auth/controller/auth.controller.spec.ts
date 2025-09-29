@@ -5,10 +5,11 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginUserDto } from '../dto/login.dto';
 import { IUser } from '../interface';
 
-describe('AuthController', () => {
+describe('AuthController (unit)', () => {
+  // Service and repository mocks
   let controller: AuthController;
   let authService: AuthService;
-
+  // Mock implementations
   const mockUser: IUser = {
     id: '1',
     email: 'test@example.com',
@@ -16,7 +17,6 @@ describe('AuthController', () => {
     password: '$2b$10$hashedPassword',
     isActive: true,
   };
-
   const mockAuthService = {
     register: jest.fn(),
     login: jest.fn(),
@@ -32,7 +32,7 @@ describe('AuthController', () => {
         },
       ],
     }).compile();
-
+    // Get instances of service and repository
     controller = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
   });
@@ -44,16 +44,17 @@ describe('AuthController', () => {
         password: 'Password123!',
         fullName: 'Test User',
       };
-
+      // Arrange
       mockAuthService.register.mockResolvedValue(mockUser);
-
+      // Spies
+      const registerSpy = jest.spyOn(authService, 'register');
+      const authServiceRegisterSpy = jest.spyOn(authService, 'register');
+      // Act
       const result = await controller.register(createUserDto);
-
+      // Assert
+      expect(registerSpy).toHaveBeenCalledWith(createUserDto);
+      expect(authServiceRegisterSpy).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockUser);
-      expect(jest.spyOn(authService, 'register')).toHaveBeenCalledWith(
-        createUserDto,
-      );
-      expect(jest.spyOn(authService, 'register')).toHaveBeenCalledTimes(1);
     });
 
     it('should handle registration errors', async () => {
@@ -62,14 +63,15 @@ describe('AuthController', () => {
         password: 'Password123!',
         fullName: 'Test User',
       };
-
+      // Arrange
       const error = new Error('Registration failed');
+      // Act
       mockAuthService.register.mockRejectedValue(error);
-
+      // Spies
+      const registerSpy = jest.spyOn(authService, 'register');
+      // Assert
       await expect(controller.register(createUserDto)).rejects.toThrow(error);
-      expect(jest.spyOn(authService, 'register')).toHaveBeenCalledWith(
-        createUserDto,
-      );
+      expect(registerSpy).toHaveBeenCalledWith(createUserDto);
     });
   });
 
@@ -79,19 +81,20 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'Password123!',
       };
-
       const loginResponse = {
         user: { id: mockUser.id, email: mockUser.email },
         token: 'jwt-token',
       };
-
+      // Arrange
       mockAuthService.login.mockResolvedValue(loginResponse);
-
+      // Spies
+      const loginSpy = jest.spyOn(authService, 'login');
+      // Act
       const result = await controller.login(loginDto);
-
+      // Assert
+      expect(loginSpy).toHaveBeenCalledWith(loginDto);
+      expect(loginSpy).toHaveBeenCalledTimes(1);
       expect(result).toEqual(loginResponse);
-      expect(jest.spyOn(authService, 'login')).toHaveBeenCalledWith(loginDto);
-      expect(jest.spyOn(authService, 'login')).toHaveBeenCalledTimes(1);
     });
 
     it('should handle login errors', async () => {
@@ -99,12 +102,14 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'Password123!',
       };
-
       const error = new Error('Login failed');
+      /// Arrange
       mockAuthService.login.mockRejectedValue(error);
-
+      // Spies
+      const loginSpy = jest.spyOn(authService, 'login');
+      // Assert
       await expect(controller.login(loginDto)).rejects.toThrow(error);
-      expect(jest.spyOn(authService, 'login')).toHaveBeenCalledWith(loginDto);
+      expect(loginSpy).toHaveBeenCalledWith(loginDto);
     });
 
     it('should pass through authentication errors', async () => {
@@ -114,14 +119,17 @@ describe('AuthController', () => {
       };
 
       const authError = new Error('Invalid credentials');
+      // Arrange
       mockAuthService.login.mockRejectedValue(authError);
-
+      // Spies
+      const loginSpy = jest.spyOn(authService, 'login');
+      // Assert
       await expect(controller.login(loginDto)).rejects.toThrow(authError);
-      expect(jest.spyOn(authService, 'login')).toHaveBeenCalledWith(loginDto);
+      expect(loginSpy).toHaveBeenCalledWith(loginDto);
     });
   });
   afterEach(() => {
-    // Limpia todos los mocks
+    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });

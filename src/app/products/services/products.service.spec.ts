@@ -9,41 +9,39 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { IUpdateResult } from '../interface/producto.interface';
 
 describe('ProductsService (unit)', () => {
-  let service: ProductsService;
-  let repo: jest.Mocked<ProductsRepository>;
+  // Service and repository mocks
+  let productService: jest.Mocked<ProductsService>;
+  let productsRepo: jest.Mocked<ProductsRepository>;
   let contenfulService: jest.Mocked<ContenfulService>;
+  // Mock implementations
+  const mockProductRepository: Partial<jest.Mocked<ProductsRepository>> = {
+    findAll: jest.fn(),
+    productUpsert: jest.fn(),
+    updateStatus: jest.fn(),
+    findOne: jest.fn(),
+  };
+  const mockedContentfulApiService: Partial<jest.Mocked<ContenfulService>> = {
+    syncProductsFromApi: jest.fn(),
+  };
+  const mockLogger = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
 
   beforeEach(async () => {
-    const repoMock: Partial<jest.Mocked<ProductsRepository>> = {
-      findAll: jest.fn(),
-      productUpsert: jest.fn(),
-      updateStatus: jest.fn(),
-      findOne: jest.fn(),
-    };
-
-    const contenfulServiceMock: Partial<jest.Mocked<ContenfulService>> = {
-      syncProductsFromApi: jest.fn(),
-    };
-
-    const loggerMock = {
-      log: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-      verbose: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
-        { provide: ProductsRepository, useValue: repoMock },
-        { provide: ContenfulService, useValue: contenfulServiceMock },
-        { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
+        { provide: ProductsRepository, useValue: mockProductRepository },
+        { provide: ContenfulService, useValue: mockedContentfulApiService },
+        { provide: WINSTON_MODULE_PROVIDER, useValue: mockLogger },
       ],
     }).compile();
-
-    service = module.get<ProductsService>(ProductsService);
-    repo = module.get(ProductsRepository);
+    // Get instances of service and repository
+    productService = module.get(ProductsService);
+    productsRepo = module.get(ProductsRepository);
     contenfulService = module.get(ContenfulService);
   });
 
@@ -85,12 +83,20 @@ describe('ProductsService (unit)', () => {
           deletedAt: undefined,
         },
       ];
-      repo.findAll.mockResolvedValue({ results: mockResults, count: 2 });
-
       const params: SearchQueryParamsDto = { page: 1, limit: 2 };
-      const res = await service.findAll(params);
-
-      expect(jest.spyOn(repo, 'findAll')).toHaveBeenCalledWith(params);
+      // Arrange
+      productsRepo.findAll.mockResolvedValue({
+        results: mockResults,
+        count: 2,
+      });
+      // Spies
+      const findAllSpy = jest
+        .spyOn(productsRepo, 'findAll')
+        .mockResolvedValue({ results: mockResults, count: 2 });
+      // Act
+      const res = await productService.findAll(params);
+      // Assert
+      expect(findAllSpy).toHaveBeenCalledWith(params);
       expect(res).toBeDefined();
       expect(res.results).toHaveLength(2);
       expect(res.totalRecords).toBe(2);
@@ -104,8 +110,6 @@ describe('ProductsService (unit)', () => {
 
     it('should handle search parameters', async () => {
       const mockResults: Products[] = [];
-      repo.findAll.mockResolvedValue({ results: mockResults, count: 0 });
-
       const params: SearchQueryParamsDto = {
         page: 1,
         limit: 10,
@@ -114,10 +118,20 @@ describe('ProductsService (unit)', () => {
         minPrice: 50,
         maxPrice: 200,
       };
+      // Arrange
+      productsRepo.findAll.mockResolvedValue({
+        results: mockResults,
+        count: 0,
+      });
+      // Spies
+      const findAllSpy = jest
+        .spyOn(productsRepo, 'findAll')
+        .mockResolvedValue({ results: mockResults, count: 0 });
+      // Act
 
-      const res = await service.findAll(params);
-
-      expect(jest.spyOn(repo, 'findAll')).toHaveBeenCalledWith(params);
+      const res = await productService.findAll(params);
+      // Assert
+      expect(findAllSpy).toHaveBeenCalledWith(params);
       expect(res.results).toHaveLength(0);
       expect(res.totalRecords).toBe(0);
     });
@@ -125,7 +139,6 @@ describe('ProductsService (unit)', () => {
 
   describe('syncProductsFromApi', () => {
     it('should successfully sync products from Contentful', async () => {
-      // Mock data from Contentful service
       const mockContentfulProducts: Partial<Products>[] = [
         {
           externalId: 'contentful-1',
@@ -152,40 +165,35 @@ describe('ProductsService (unit)', () => {
           stock: 25,
         },
       ];
-      // Mock repository upsert results (TypeORM InsertResult)
       const mockUpsertResults: InsertResult[] = [
-        {
-          identifiers: [{ id: '1' }],
-          generatedMaps: [{ id: '1' }],
-          raw: [],
-        },
-        {
-          identifiers: [{ id: '2' }],
-          generatedMaps: [{ id: '2' }],
-          raw: [],
-        },
+        { identifiers: [{ id: '1' }], generatedMaps: [{ id: '1' }], raw: [] },
+        { identifiers: [{ id: '2' }], generatedMaps: [{ id: '2' }], raw: [] },
       ];
-      // Setup mocks
+      // Arrange
       contenfulService.syncProductsFromApi.mockResolvedValue(
         mockContentfulProducts,
       );
-      repo.productUpsert
+      //
+      productsRepo.productUpsert
         .mockResolvedValueOnce(mockUpsertResults[0])
         .mockResolvedValueOnce(mockUpsertResults[1]);
-      // Execute the method
-      const result = await service.syncProducts();
-      // Verify the calls
-      expect(
-        jest.spyOn(contenfulService, 'syncProductsFromApi'),
-      ).toHaveBeenCalledTimes(1);
-      expect(jest.spyOn(repo, 'productUpsert')).toHaveBeenCalledTimes(2);
-      expect(jest.spyOn(repo, 'productUpsert')).toHaveBeenCalledWith(
-        mockContentfulProducts[0],
-      );
-      expect(jest.spyOn(repo, 'productUpsert')).toHaveBeenCalledWith(
-        mockContentfulProducts[1],
-      );
-      // Verify the result
+      // Spies
+      const syncSpy = jest
+        .spyOn(contenfulService, 'syncProductsFromApi')
+        .mockResolvedValue(mockContentfulProducts);
+      //
+      const upsertSpy = jest
+        .spyOn(productsRepo, 'productUpsert')
+        .mockResolvedValueOnce(mockUpsertResults[0])
+        .mockResolvedValueOnce(mockUpsertResults[1]);
+      // Act
+      const result = await productService.syncProducts();
+      // Assert
+      expect(syncSpy).toHaveBeenCalledTimes(1);
+      expect(upsertSpy).toHaveBeenCalledTimes(2);
+      expect(upsertSpy).toHaveBeenCalledWith(mockContentfulProducts[0]);
+      expect(upsertSpy).toHaveBeenCalledWith(mockContentfulProducts[1]);
+
       expect(result).toEqual(mockUpsertResults);
     });
   });
@@ -215,20 +223,29 @@ describe('ProductsService (unit)', () => {
         affected: 1,
         raw: {},
       };
+      // Arrange
+      productsRepo.findOne.mockResolvedValue(mockProduct);
+      productsRepo.updateStatus.mockResolvedValue(mockUpdateResult);
+      // Spies
+      const findOneSpy = jest
+        .spyOn(productsRepo, 'findOne')
+        .mockResolvedValue(mockProduct);
+      //
+      const updateSpy = jest
+        .spyOn(productsRepo, 'updateStatus')
+        .mockResolvedValue(mockUpdateResult);
 
-      repo.findOne.mockResolvedValue(mockProduct);
-      repo.updateStatus.mockResolvedValue(mockUpdateResult);
-
-      const result = await service.updateStatus(productId);
-
-      expect(jest.spyOn(repo, 'findOne')).toHaveBeenCalledWith(productId);
-      expect(jest.spyOn(repo, 'updateStatus')).toHaveBeenCalledWith(productId);
+      // Act
+      const result = await productService.updateStatus(productId);
+      // Assert
+      expect(findOneSpy).toHaveBeenCalledWith(productId);
+      expect(updateSpy).toHaveBeenCalledWith(productId);
       expect(result).toEqual(mockUpdateResult);
     });
   });
   //
   afterEach(() => {
-    // Limpia todos los mocks después de cada test
+    // clean up mocks after each test
     jest.clearAllMocks();
   });
 });
