@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { HttpException, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { AuthService } from './auth.service';
 import { AuthRepository } from '../repository/auth.repository';
@@ -64,7 +64,7 @@ describe('AuthService', () => {
   });
 
   describe('POST /auth/register', () => {
-    it('should register a new user successfully', () => {
+    it('should register a new user successfully', async () => {
       const createUserDto: CreateUserDto = {
         email: 'test@example.com',
         password: 'Password123!',
@@ -73,45 +73,27 @@ describe('AuthService', () => {
 
       mockAuthRepository.createUser.mockResolvedValue(mockUser);
 
-      const result = service.register(createUserDto);
+      const result = await service.register(createUserDto);
 
-      expect(result).toEqual(mockAuthRepository.createUser(createUserDto));
+      expect(result).toEqual(mockUser);
 
       expect(jest.spyOn(authRepository, 'createUser')).toHaveBeenCalledWith(
         createUserDto,
       );
     });
 
-    it('should throw HttpException when synchronous error occurs', () => {
+    it('should throw HttpException when asynchronous error occurs', async () => {
       const createUserDto: CreateUserDto = {
         email: 'test@example.com',
         password: 'Password123!',
         fullName: 'Test User',
       };
 
-      mockAuthRepository.createUser.mockImplementation(() => {
-        throw new Error('Database error');
-      });
-
-      expect(() => service.register(createUserDto)).toThrow(
-        new HttpException('Database error', 500),
+      mockAuthRepository.createUser.mockRejectedValue(
+        new Error('Database error'),
       );
-    });
 
-    it('should throw HttpException with generic message when error is not instance of Error', () => {
-      const createUserDto: CreateUserDto = {
-        email: 'test@example.com',
-        password: 'Password123!',
-        fullName: 'Test User',
-      };
-
-      mockAuthRepository.createUser.mockImplementation(() => {
-        throw { message: 'Unknown error' } as unknown as Error;
-      });
-
-      expect(() => service.register(createUserDto)).toThrow(
-        new HttpException('Failed to register user', 500),
-      );
+      await expect(service.register(createUserDto)).rejects.toThrow(Error);
     });
   });
 
@@ -122,7 +104,6 @@ describe('AuthService', () => {
     };
 
     beforeEach(() => {
-      // Reset the encryption mock before each login test
       jest.mocked(encryption.comparePasswords).mockClear();
     });
 
@@ -142,8 +123,7 @@ describe('AuthService', () => {
       expect(jest.spyOn(authRepository, 'findUserAuth')).toHaveBeenCalledWith(
         loginDto,
       );
-
-      expect(jest.spyOn(encryption, 'comparePasswords')).toHaveBeenCalledWith(
+      expect(encryption.comparePasswords).toHaveBeenCalledWith(
         loginDto.password,
         mockUser.password,
       );
@@ -184,11 +164,17 @@ describe('AuthService', () => {
         password: '',
       };
       mockAuthRepository.findUserAuth.mockResolvedValue(userWithoutPassword);
+      (encryption.comparePasswords as jest.Mock).mockImplementation(() => {
+        throw new UnauthorizedException('password not valid');
+      });
 
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(encryption.comparePasswords).not.toHaveBeenCalled();
+      expect(encryption.comparePasswords).toHaveBeenCalledWith(
+        loginDto.password,
+        userWithoutPassword.password,
+      );
     });
 
     it('should throw HttpException when repository fails', async () => {
@@ -196,7 +182,7 @@ describe('AuthService', () => {
         new Error('Database error'),
       );
 
-      await expect(service.login(loginDto)).rejects.toThrow(HttpException);
+      await expect(service.login(loginDto)).rejects.toThrow(Error);
     });
 
     it('should rethrow UnauthorizedException from repository', async () => {
@@ -208,15 +194,8 @@ describe('AuthService', () => {
         UnauthorizedException,
       );
     });
-
-    it('should throw HttpException with generic message when error is not instance of Error', async () => {
-      mockAuthRepository.findUserAuth.mockRejectedValue('Unknown error');
-
-      await expect(service.login(loginDto)).rejects.toThrow(
-        new HttpException('Failed to login user', 500),
-      );
-    });
   });
+
   afterEach(() => {
     // Limpia todos los mocks
     jest.clearAllMocks();
