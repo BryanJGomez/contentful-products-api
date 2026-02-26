@@ -25,7 +25,7 @@
   "jest.testMatch": ["**/src/**/*.spec.ts", "**/test/**/*.e2e-spec.ts"],
   "jest.debugMode": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
-  "explorer.fileNesting.enabled": true,
+  // "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
     "*.ts": "${capture}.spec.ts,${capture}.e2e-spec.ts,${capture}.test.ts",
     "*.module.ts": "${capture}.controller.ts,${capture}.service.ts,${capture}.entity.ts,${capture}.dto.ts"

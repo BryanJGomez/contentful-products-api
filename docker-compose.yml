@@ -11,12 +11,12 @@ services:
       - PORT=${PORT}
     working_dir: /app
     user: node
-    stop_grace_period: 10s
+    stop_grace_period: ${DOCKER_STOP_GRACE_PERIOD:-10s}
     ports:
-      - "3000:3000"
+      - '${PORT}:${PORT}'
     volumes:
       - .:/app
-      - /app/node_modules
+    command: bash -c "$DOCKER_COMMAND"
     networks:
       backend:
         aliases:
@@ -32,7 +32,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
